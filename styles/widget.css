@@ -7,11 +7,7 @@
 	div#scatterplot {
 		height: 600px;
 		width: 600px;
-<<<<<<< HEAD
-		float:left; /* add this */
-=======
 		float:left; 
->>>>>>> gh-pages
 	}
 
 	div#controls {
