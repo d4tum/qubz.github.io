@@ -1,10 +1,10 @@
-	div#widget {
+	#widget {
 		width: 900px;
    		overflow: hidden;
 		margin-left: 250px;
 	}
 
-	div#scatterplot {
+	#scatterplot {
 		height: 600px;
 		width: 600px;
 <<<<<<< HEAD
@@ -18,7 +18,7 @@
 >>>>>>> Resolved conflict.
 	}
 
-	div#controls {
+	#controls {
     	overflow: hidden;
 	}
 
