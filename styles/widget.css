@@ -7,7 +7,15 @@
 	#scatterplot {
 		height: 600px;
 		width: 600px;
+<<<<<<< HEAD
+<<<<<<< HEAD
 		float:left; 
+=======
+		float:left; /* add this */
+>>>>>>> Fixed scatterplot obscured in Firefox.
+=======
+		float:left; 
+>>>>>>> Resolved conflict.
 	}
 
 	#controls {
