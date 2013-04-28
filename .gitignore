@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 _site/
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -9,6 +10,8 @@ _site/
 
 >>>>>>> Initial commit.
 >>>>>>> Initial commit.
+=======
+>>>>>>> Included JQuery UI Touch Punch for better touch event handling on mobile devices.
 # Compiled source #
 ###################
 *.com
