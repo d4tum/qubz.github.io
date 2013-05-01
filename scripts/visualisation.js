@@ -167,13 +167,15 @@ var d3LoadedCallback = function() {
 			.attr("width", w)
 			.attr("height", h);
 
-		// Retrieve user data from userdata.json
-		d3.json("json/user_data.json", function(json) {
-			userdata = json;
+		$.ajax({
+			type: 'GET',
+			dataType: 'json',
+			url: 'http://staging.yourview.org.au/visualization/points.json?forum=1',
+			success: function(data) {
+				userdata = data;
 			retrievePoints(userdata);
-		});
 
-		function retrievePoints(userdata) {
+			function retrievePoints(userdata) {
 			d3.json("json/points.json", function(json) {
 				points = json;
 				initVisiblityArray();
@@ -535,6 +537,20 @@ var d3LoadedCallback = function() {
 
 			});
 		});
+
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log(textStatus, errorThrown);
+			}
+		});
+
+		// Retrieve user data from userdata.json
+		//d3.json("json/user_data.json", function(json) {
+		//	userdata = json;
+		//	retrievePoints(userdata);
+		//});
+
+		
 
 	});
 };
