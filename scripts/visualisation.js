@@ -34,6 +34,11 @@ if (!doc.getElementById(cssId)) {
 }
 
 // Load jQuery.js using only JS
+var jQueryUrl = '//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js';
+var jQueryUiUrl = '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js';
+var d3Url = 'http://d3js.org/d3.v2.js';
+
+loadScript(jQueryUrl, jQueryLoadedCallback);
 
 function loadScript(url, callback) {
 	// adding the script tag to the head as suggested before
@@ -50,10 +55,6 @@ function loadScript(url, callback) {
 	// fire the loading
 	head.appendChild(script);
 }
-
-var jQueryUrl = '//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js';
-var jQueryUiUrl = '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js';
-var d3Url = 'http://d3js.org/d3.v2.js';
 
 var jQueryLoadedCallback = function() {
 	console.log('jQuery loaded');
@@ -162,49 +163,19 @@ var d3LoadedCallback = function() {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~d3 stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		$.ajax({
-			type: 'GET',
-			dataType: 'json',
-			url: 'http://staging.yourview.org.au/visualization/points.json?forum=1',
-			success: function(data) {
-				//userdata = data;
-				//retrievePoints(userdata);
-				console.log("got points!");
-
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus, errorThrown);
-			}
-		});
-
 		var svg = d3.select("#scatterplot")
 			.append("svg")
 			.attr("width", w)
 			.attr("height", h);
 
-		$.ajax({
-			type: 'GET',
-			dataType: 'json',
-			url: 'http://staging.yourview.org.au/visualization/user_data.json?forum=1',
-			success: function(data) {
-				//userdata = data;
-				//retrievePoints(userdata);
-				console.log("got user_data!");
-
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus, errorThrown);
-			}
+		// Retrieve user data from userdata.json
+		d3.json("http://staging.yourview.org.au/visualization/user_data.json?forum=1", function(json) {
+			userdata = json;
+			retrievePoints(userdata);
 		});
 
-		// Retrieve user data from userdata.json
-		//d3.json("json/user_data.json", function(json) {
-		//	userdata = json;
-		//	retrievePoints(userdata);
-		//});
-
 		function retrievePoints(userdata) {
-			d3.json("json/points.json", function(json) {
+			d3.json("http://staging.yourview.org.au/visualization/points.json?forum=1", function(json) {
 				points = json;
 				initVisiblityArray();
 				findRange(points);
@@ -568,7 +539,3 @@ var d3LoadedCallback = function() {
 
 	});
 };
-
-
-
-loadScript(jQueryUrl, jQueryLoadedCallback);
