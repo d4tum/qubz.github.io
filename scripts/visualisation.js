@@ -38,8 +38,6 @@ var jQueryUrl = '//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js';
 var jQueryUiUrl = '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js';
 var d3Url = 'http://d3js.org/d3.v2.js';
 
-loadScript(jQueryUrl, jQueryLoadedCallback);
-
 function loadScript(url, callback) {
 	// adding the script tag to the head as suggested before
 	var head = document.getElementsByTagName('head')[0];
@@ -539,3 +537,5 @@ var d3LoadedCallback = function() {
 
 	});
 };
+
+loadScript(jQueryUrl, jQueryLoadedCallback);
