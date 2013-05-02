@@ -167,13 +167,13 @@ var d3LoadedCallback = function() {
 			.attr("height", h);
 
 		// Retrieve user data from userdata.json
-		d3.json("http://staging.yourview.org.au/visualization/user_data.json?forum=1", function(json) {
+		d3.json("json/user_data.json", function(json) {
 			userdata = json;
 			retrievePoints(userdata);
 		});
 
 		function retrievePoints(userdata) {
-			d3.json("http://staging.yourview.org.au/visualization/points.json?forum=1", function(json) {
+			d3.json("json/points.json", function(json) {
 				points = json;
 				initVisiblityArray();
 				findRange(points);
