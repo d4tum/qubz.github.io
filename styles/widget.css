@@ -3,7 +3,8 @@
    		overflow: hidden;
    		margin-top: 15px;
 		margin-left: 250px;
-		border:1px solid #BFBFBF;
+		border:1px solid #ADADAD;
+		/*box-shadow: 0px 2px 5px #aaaaaa;*/
 		box-shadow: 0px 4px 8px #aaaaaa;
 
 		background: #eeeeee; /* Old browsers */
@@ -18,7 +19,7 @@
 		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#eeeeee',GradientType=0 ); /* IE6-8 */
 	}
 
-	#scatterplot {
+	#plot {
 		height: 600px;
 		width: 600px;
 		float:left; 
@@ -26,6 +27,19 @@
 
 	#controls {
     	overflow: hidden;
+	}
+
+	#slider-header-title {
+		text-align: center;
+	}
+
+	.button {
+		height: 2.5em;
+		width: 250px;
+	}
+
+	.button_clicked {
+		background: #D4D4D4;
 	}
 
 	.container{
@@ -37,8 +51,8 @@
     	overflow: auto;
 	}
 
-	/* For the tabs */
+	/* For the tabs to adjust the theme */
 	.ui-widget-content, .ui-widget-content a, .ui-widget-header, .ui-widget-header a, .ui-tabs-nav li .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { 
 		font-family: Verdana,Arial,sans-serif; 
-		font-size: 10pt; 
+		font-size: 13px; 
 	}

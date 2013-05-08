@@ -1,33 +1,46 @@
-var w = 600
-var h = 600
-var range = 0;
-var data = []; // datapoints - an array of json objects
-var points; // points of the points.json file
-var userdata; // user data from the user_data.json file
-var visibility = []; // Association array describing which entities are visible
+// Constants
+var w = 600;
+var h = 600;
+var padding = 60;
+var radius = 15;
 
-// Load all style sheets
+// Global vars
+var data = []; // the  datajoin object for d3
+var tags; // Tag wieghts for sliders
+var users; // user data (index corresponds to that of points.json)
+var points; // points (index corresponds to the users from user_data.json)
+
+// For bug where text labels are only half their supposed x value
+// See http://stackoverflow.com/questions/7000190/detect-all-firefox-versions-in-js
+// for this solution.
+var is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+
+// Load each style sheet
 var doc = document; // shortcut
 
-var cssId = 'widgetCss'; // you could encode the css path itself to generate id..
+// Pull in the main css file
+var cssId = 'widgetCss';
 if (!doc.getElementById(cssId)) {
 	var head = doc.getElementsByTagName('head')[0];
 	var link = doc.createElement('link');
 	link.id = cssId;
 	link.rel = 'stylesheet';
 	link.type = 'text/css';
+	// link.href = 'https://raw.github.com/qubz/YourView-Political-Alignment-Visualisation/master/styles/widget.css';
 	link.href = 'styles/widget.css';
 	link.media = 'all';
 	head.appendChild(link);
 }
 
-var cssId = 'themeCss'; // you could encode the css path itself to generate id..
+// Grab the theme css file
+var cssId = 'themeCss';
 if (!doc.getElementById(cssId)) {
 	var head = doc.getElementsByTagName('head')[0];
 	var link = doc.createElement('link');
 	link.id = cssId;
 	link.rel = 'stylesheet';
 	link.type = 'text/css';
+	// link.href = 'https://raw.github.com/qubz/YourView-Political-Alignment-Visualisation/master/styles/absolution.css';
 	link.href = 'styles/absolution.css';
 	link.media = 'all';
 	head.appendChild(link);
@@ -55,152 +68,137 @@ function loadScript(url, callback) {
 }
 
 var jQueryLoadedCallback = function() {
-	console.log('jQuery loaded');
-	// here, do what ever you want
 	loadScript(jQueryUiUrl, jQueryUILoadedCallback);
-
 };
 
 var jQueryUILoadedCallback = function() {
-	console.log('jQuery UI loaded');
-	// here, do what ever you want
 	loadScript(d3Url, d3LoadedCallback);
-
 };
 
 var d3LoadedCallback = function() {
-	console.log('d3 loaded');
-
-	// ready to run the rest of the code
+	// Everything is loaded, ready to run the rest of the code
 	$(document).ready(function() {
-		// put all your jQuery goodness in here.
-		// jQuery stuff to build DOM
-		// body
-		//1. 	|---widget
-		//2.			|---scatterplot
-		//3.			|---controls
-		//4.					|---tabs
-		//5.						|---tabs-1
-		//								
-		//6.						|---tabs-2
-
-		//1.
+		// jQuery stuff to build DOM from this script
 		var widget = document.getElementById("yourview-visualization");
-
-		//2, 3.
-		var scatterplot = $("<div id='scatterplot'></div>");
+		var plot = $("<div id='plot'></div>");
 		var controls = $("<div id='controls'></div>");
-		scatterplot.appendTo(widget);
+
+		plot.appendTo(widget);
 		controls.appendTo(widget);
 
-		//4.
-		var tabs = $("<div id='tabs' class='container'></div>");
-		tabs.appendTo(controls);
+		// Initiealise the controls; the tabs.
 
-		var ul = $("<ul></ul>");
-		ul.appendTo(tabs);
+		function initControls() {
+			var tabs = $("<div id='tabs' class='container'></div>");
+			tabs.appendTo(controls);
 
-		var li = $("<li></li>");
-		li.appendTo(ul);
+			var ul = $("<ul></ul>");
+			ul.appendTo(tabs);
 
-		//5.
-		var tab1Title = $("<a href='#tabs-1'>Areas</a>");
-		tab1Title.appendTo(li);
+			var li = $("<li></li>");
+			li.appendTo(ul);
 
-		var li = $("<li></li>");
-		li.appendTo(ul);
+			var tab1Title = $("<a href='#tabs-1'>Areas</a>");
+			tab1Title.appendTo(li);
 
-		//6.
-		var tab2Title = $("<a href='#tabs-2'>Entities</a>");
-		tab2Title.appendTo(li);
+			var li = $("<li></li>");
+			li.appendTo(ul);
 
-		var tab1 = $("<div id='tabs-1' class='panel'></div>");
-		tab1.appendTo(tabs);
+			var tab2Title = $("<a href='#tabs-2'>Entities</a>");
+			tab2Title.appendTo(li);
 
-		var slider1 = $("<p>Environment</p><div id='slider1'></div>");
-		slider1.appendTo(tab1);
-		var slider2 = $("<p>Economy and Business</p><div id='slider2'></div>");
-		slider2.appendTo(tab1);
-		var slider3 = $("<p>Social Policy</p><div id='slider3'></div>");
-		slider3.appendTo(tab1);
-		var slider4 = $("<p>Asylum Seekers</p><div id='slider4'></div>");
-		slider4.appendTo(tab1);
-		var slider5 = $("<p>Education</p><div id='slider5'></div>");
-		slider5.appendTo(tab1);
-		var slider6 = $("<p>Transport</p><div id='slider6'></div>");
-		slider6.appendTo(tab1);
-		var slider7 = $("<p>Tax Reform</p><div id='slider7'></div>");
-		slider7.appendTo(tab1);
-		var slider8 = $("<p>Indigenous Disadvantage</p><div id='slider8'></div>");
-		slider8.appendTo(tab1);
-		var slider9 = $("<p>Socio-economic Gap</p><div id='slider9'></div>");
-		slider9.appendTo(tab1);
-		var slider10 = $("<p>Mental Health</p><div id='slider10'></div>");
-		slider10.appendTo(tab1);
-		var slider11 = $("<p>Water</p><div id='slider11'></div>");
-		slider11.appendTo(tab1);
-		var slider12 = $("<p>Glass Ceiling</p><div id='slider12'></div>");
-		slider12.appendTo(tab1);
-		var slider13 = $("<p>Homelessness</p><div id='slider13'></div>");
-		slider13.appendTo(tab1);
+			var tab1 = $("<div id='tabs-1' class='panel'></div>");
+			tab1.appendTo(tabs);
 
-		var tab2 = $("<div id='tabs-2' class='panel'></div>");
-		tab2.appendTo(tabs);
+			// Decribe the function of the tag weights to the user
+			var sliderHeaderTitle = $("<p id='slider-header-title' ><--- Less --- IMPORTANT --- More ---></p>");
+			sliderHeaderTitle.appendTo(tab1);
 
-		var button1 = $("<button id='button1'>Liberals</button>");
-		var button2 = $("<button id='button2'>Labor</button>");
-		var button3 = $("<button id='button3'>Greens</button>");
-		var button4 = $("<button id='button4'>Nationals</button>");
-		var button5 = $("<button id='button5'>Tim van Gelder</button>");
+			// Add each slider from tags and set its callback function
+			// TODO: 	- A POST request with all tags sent to the server for fresh points
+			var sliders = [];
+			for (var i = 0; i < tags.length; i++) {
+				sliders.push($("<p>" + tags[i].name + "</p><div id='slider" + i + "'></div>"));
+				sliders[i].appendTo(tab1);
 
-		button1.appendTo(tab2);
-		button2.appendTo(tab2);
-		button3.appendTo(tab2);
-		button4.appendTo(tab2);
-		button5.appendTo(tab2);
+				$("#slider" + i).slider({
+					value: tags[i].weight,
+					min: 0,
+					max: 1,
+					step: 0.2
+				}).on("slidestop", function(event, ui) {
+					update();
+				});
+			}
+
+			var tab2 = $("<div id='tabs-2' class='panel'></div>");
+			tab2.appendTo(tabs);
+
+			var table = $("<table></table>");
+			table.appendTo(tab2);
+
+			// Add each button from users and set its callback function
+			// TODO: 	- This could probably be simplified
+			//			- Checked/clicked state (using Checkbox button?)
+			//			- Tranlate to links?
+			var entities = [];
+			for (var i = 0; i < users.length; i++) {
+
+				var tr = $("<tr></tr>");
+				tr.appendTo(table);
+
+				var td = $("<td></td>");
+				td.appendTo(tr);
+
+				entities.push($("<button id='" + users[i].id + "' class='button'>" + users[i].username + "</button>").addClass("button_clicked"));
+				entities[i].appendTo(td);
+
+				$("#" + users[i].id).click(function() {
+					var id = $(this).attr('id');
+					for (var j = 0; j < users.length; j++) {
+						if (users[j].id == id) {
+							users[j].primary = !users[j].primary;
+							if (users[j].primary) $(this).addClass("button_clicked");
+							else $(this).removeClass("button_clicked");
+							toggleEnitiy();
+
+						}
+					}
+
+				});
+			}
+
+			$(function() {
+				$("#tabs").tabs();
+			});
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~d3 stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		var svg = d3.select("#scatterplot")
+		var svg = d3.select("#plot")
 			.append("svg")
 			.attr("width", w)
 			.attr("height", h);
 
-		// Retrieve user data from userdata.json
+		// Retrieve user data from user_data.json
+		// d3.json("http://staging.yourview.org.au/visualization/user_data.json?forum=1", function(json) {
 		d3.json("json/user_data.json", function(json) {
-			userdata = json;
-			retrievePoints(userdata);
+			users = json.users;
+			tags = json.tags;
+			initControls();
+			initPlot();
 		});
 
-		function retrievePoints(userdata) {
+		function initPlot() {
+			// d3.json("http://staging.yourview.org.au/visualization/points.json?forum=1", function(json) {
 			d3.json("json/points.json", function(json) {
-				points = json;
-				initVisiblityArray();
-				findRange(points);
+				points = scale(json);
 				data = createData();
-				plotData();
+				draw();
 			});
 		}
 
-		function initVisiblityArray() {
-			for (var i = 0; i < points.length; i++) {
-				visibility.push({
-					username: userdata[i].username,
-					enabled: true
-				});
-			}
-			console.log(visibility);
-		}
-
-		Array.max = function(array) {
-			return Math.max.apply(Math, array);
-		};
-
-		Array.min = function(array) {
-			return Math.min.apply(Math, array);
-		};
-
-		function findRange(points) {
+		function scale(points) {
 			var xs = [];
 			var ys = [];
 
@@ -209,41 +207,48 @@ var d3LoadedCallback = function() {
 				ys.push(points[i][1]);
 			}
 
-			var xRange = Array.max(xs) - Array.min(xs);
-			var yRange = Array.max(ys) - Array.min(ys);
+			var xMin = d3.min(xs);
+			var xMax = d3.max(xs);
+			var yMin = d3.min(ys);
+			var yMax = d3.max(ys);
 
-			if (xRange > yRange) range = Math.ceil(xRange) + 2;
-			else range = Math.ceil(yRange) + 2;
+			if (xMin < yMin) var min = xMin;
+			else var min = yMin;
+
+			if (xMax > yMax) var max = xMax;
+			else var max = yMax;
+
+			var linearScale = d3.scale.linear()
+				.domain([min, max])
+				.range([0 + padding, w - padding]);
+
+			var scaledPoints = []
+			for (var i = 0; i < points.length; i++) {
+				xs[i] = linearScale(xs[i]);
+				ys[i] = linearScale(ys[i]);
+				scaledPoints.push([xs[i], ys[i]]);
+			}
+
+			return scaledPoints;
 		}
 
 		function createData() {
 			var dataset = [];
-			// Add the user data to the points
-			for (var i = 0; i < points.length; i++) {
-				if (visibility[i].enabled) {
-					dataset.push({
-						x: points[i][0],
-						y: points[i][1],
-						colour: userdata[i].colour,
-						cred: userdata[i].cred,
-						id: userdata[i].id,
-						link: userdata[i].link,
-						primary: userdata[i].primary,
-						username: userdata[i].username
-					});
-				}
+			// Merge users with points into an object
+			for (var i = 0; i < users.length; i++) {
+				dataset.push({
+					x: points[i][0],
+					y: points[i][1],
+					colour: users[i].colour,
+					cred: users[i].cred,
+					id: users[i].id,
+					link: users[i].link,
+					primary: users[i].primary,
+					username: users[i].username
+				});
 			}
 
 			return dataset;
-		}
-
-		function scale(dataset) {
-			for (var i = 0; i < dataset.length; i++) {
-				dataset[i].x = (dataset[i].x + (range / 2)) * 50;
-				dataset[i].y = (dataset[i].y + (range / 2)) * 50;
-				// points[i][j] = (points[i][j] + 5) * 50;
-			}
-			return dataset
 		}
 
 		var previousIndex;
@@ -270,52 +275,90 @@ var d3LoadedCallback = function() {
 			}
 
 			previousIndex = index;
-			// Adjust index for zero base
-			index -= 1;
-
-			return array[index];
+			console.log(array[index - 1]);
+			return array[index - 1];
 		}
 
-		function plotData() {
+		function sortPrimaryZBelow(a, b) {
+			if (a.primary && !b.primary) return -1;
+			else if (!a.primary && b.primary) return 1;
+			else return 0;
+		}
+
+		function draw() {
 			var g = svg.selectAll("g")
-				.data(scale(data)).enter()
+				.data(data)
+				.enter()
 				.append("g")
 				.on("mouseover", function(d) {
 				var sel = d3.select(this);
 				sel.moveToFront();
 				console.log(d.username);
-			})
+			});
 
-			var circle = g.append("circle")
+			g.append("circle")
+
 				.attr("cx", function(d) {
 				return d.x;
 			})
 				.attr("cy", function(d) {
 				return d.y;
 			})
+				.style("opacity", function(d) {
+				return 0.8;
+			})
+
+				.style("stroke", function(d) {
+				return "dark" + d.colour;
+			})
+				.style("stroke-width", 2)
 				.style("fill", function(d) {
 				return d.colour;
 			})
 				.transition()
 				.duration(700)
 				.attr("r", function(d) {
-				return 15;
+				return radius;
 			});
 
-			g.append("svg:title").text(function(d) {
+			g.append("text")
+				.attr("dx", function(d) {
+				if (is_firefox) return d.x * 2;
+				return d.x;
+			})
+				.attr("dy", function(d) {
+				return d.y + 35;
+			})
+				.attr("font-family", "sans-serif")
+				.attr("font-size", "13px")
+				.style("text-anchor", "middle")
+				.text(function(d) {
 				return d.username;
 			});
+
+			g.append("svg:title")
+				.text(function(d) {
+				return d.username;
+			});
+
 		}
 
-		function updatePlot() {
+		function update() {
 			d3.json(chooseRandDummyFile(), function(json) {
-				points = json;
-				findRange(points);
+				points = scale(json);
+				// update datapoints
 				data = createData();
 
+				svg.selectAll("g")
+					.data(data)
+					.on("mouseover", function(d) {
+					var sel = d3.select(this);
+					sel.moveToFront();
+					console.log(d.username);
+				});
 				// enter() and append() are omitted for a transision()
 				svg.selectAll("circle")
-					.data(scale(data))
+					.data(data)
 					.transition()
 					.duration(1100)
 					.attr("cx", function(d) {
@@ -324,57 +367,79 @@ var d3LoadedCallback = function() {
 					.attr("cy", function(d) {
 					return d.y;
 				})
-					.attr("r", function(d) {
-					return 15;
+					.attr("r", function(d, i) {
+					if (users[i].primary) return radius;
+					else return radius - 5;
 				})
-					.style("fill", function(d) {
-					return d3.rgb(d.colour);
+					.style("stroke", function(d, i) {
+					if (users[i].primary) return "dark" + d.colour;
+					else return "dimgray";
+				})
+					.style("stroke-width", 2)
+					.style("fill", function(d, i) {
+					if (users[i].primary) return d.colour;
+					else return "dimgray";
+				})
+
+				svg.selectAll("text")
+					.data(data)
+					.transition()
+					.duration(1100)
+					.attr("dx", function(d) {
+					if (is_firefox) return d.x * 2;
+					return d.x;
+				})
+					.attr("dy", function(d) {
+					return d.y + 35;
+				})
+					.attr("font-family", "sans-serif")
+					.attr("font-size", "13px")
+					.style("text-anchor", "middle")
+					.text(function(d) {
+					return d.username;
 				});
+
 			});
 		}
 
-		function toggleEntity(enable) {
+		function toggleEnitiy() {
 
-			data = createData();
+			// svg.selectAll('g')
+			// 	.style("opacity", function(d, i) {
+			// 	if (!visibility[i].isVisible) return 0.0;
+			// 	else return 0.8;
+			// });
 
-			if (!enable) {
-				svg.selectAll('circle')
-					.data(scale(data), function(d) {
-					return (d.username);
-				})
-					.exit().transition()
-					.attr("r", 0)
-					.remove();
-			} else {
-				svg.selectAll("circle")
-					.data(scale(data), function(d) {
-					return (d.username);
-				})
-					.enter()
-					.append("circle")
-					.on("mouseover", function(d) {
-					var sel = d3.select(this);
-					sel.moveToFront();
-					console.log(d.username);
-				})
-					.attr("cx", function(d) {
-					return d.x;
-				})
-					.attr("cy", function(d) {
-					return d.y;
-				})
-					.style("fill", function(d) {
-					return d.colour;
-				})
-					.transition()
-					.duration(700)
-					.attr("r", function(d) {
-					return 15;
-				});
-			}
+			svg.selectAll('text')
+				.transition()
+				.style("opacity", function(d, i) {
+				if (users[i].primary) return 1.0;
+				else return 0.0;
+			});
 
+			svg.selectAll('circle')
+				.transition()
+				.duration(500)
+				.attr("r", function(d, i) {
+				if (users[i].primary) return radius;
+				else return radius - 5;
+			})
+				.style("stroke", function(d, i) {
+				if (users[i].primary) return "dark" + d.colour;
+				else return "dimgray";
+			})
+				.style("stroke-width", 2)
+				.style("fill", function(d, i) {
+				if (users[i].primary) return d.colour;
+				return "dimgray";
+			});
 
-			console.log(data);
+			svg.selectAll("g")
+				.on("mouseover", function(d) {
+				var sel = d3.select(this);
+				sel.moveToFront();
+				console.log(d.username);
+			});
 
 		}
 
@@ -383,157 +448,6 @@ var d3LoadedCallback = function() {
 				this.parentNode.appendChild(this);
 			});
 		};
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~jQuery stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Create tabs
-		$(function() {
-			$("#tabs").tabs();
-		});
-
-		// Create sliders for the Areas tab with on stop callback to update the plot
-		$(function() {
-			$("#slider1").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider2").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider3").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider4").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider5").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider6").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider7").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider8").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider9").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider10").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider11").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider12").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-			$("#slider13").slider().slider("option", "min", -1).slider({
-				max: 1
-			}).on("slidestop", function(event, ui) {
-				updatePlot();
-			});
-		});
-
-		// 1. find the username of the circle clicked
-		// 2. toggle it's enabled state
-		// 3. create a new data array bad bind it to circle
-		// 4. call exit().remove()
-		// see - http://mbostock.github.io/d3/tutorial/circle.html
-		$(function() {
-			$("#button1").click(function() {
-				for (var i = 0; i < visibility.length; i++) {
-					if (visibility[i].username == 'Liberals') {
-						console.log(visibility[i].enabled);
-						visibility[i].enabled = !visibility[i].enabled;
-						toggleEntity(visibility[i].enabled);
-					}
-				}
-
-			});
-		});
-
-		$(function() {
-			$("#button2").click(function() {
-
-				for (var i = 0; i < visibility.length; i++) {
-					if (visibility[i].username == 'Labor') {
-						console.log(visibility[i].enabled);
-						visibility[i].enabled = !visibility[i].enabled;
-						console.log(visibility[i].enabled);
-						toggleEntity(visibility[i].enabled);
-					}
-				}
-
-			});
-		});
-
-		$(function() {
-			$("#button3").click(function() {
-
-				for (var i = 0; i < visibility.length; i++) {
-					if (visibility[i].username == 'Greens') {
-						console.log(visibility[i].enabled);
-						visibility[i].enabled = !visibility[i].enabled;
-						toggleEntity(visibility[i].enabled);
-					}
-				}
-
-			});
-		});
-
-		$(function() {
-			$("#button4").click(function() {
-
-				for (var i = 0; i < visibility.length; i++) {
-					if (visibility[i].username == 'Nationals') {
-						console.log(visibility[i].enabled);
-						visibility[i].enabled = !visibility[i].enabled;
-						toggleEntity(visibility[i].enabled);
-					}
-				}
-
-			});
-		});
-
-		$(function() {
-			$("#button5").click(function() {
-
-				for (var i = 0; i < visibility.length; i++) {
-					if (visibility[i].username == 'timvangelder') {
-						console.log(visibility[i].enabled);
-						visibility[i].enabled = !visibility[i].enabled;
-						toggleEntity(visibility[i].enabled);
-					}
-				}
-
-			});
-		});
 
 	});
 };
