@@ -86,7 +86,7 @@ $(document).ready(function() {
 				$.ajax({
 					type: 'GET',
 					dataType: 'json',
-					url: 'http://staging.yourview.org.au/visualization/points.json?forum=1&id_key=1' + str,
+					url: '/visualization/points.json?forum=1&id_key=1' + str,
 					success: function(json) {
 						pointDict = scale(json);
 						update();
@@ -132,7 +132,7 @@ $(document).ready(function() {
 						primaryFlags[id].primary = !primaryFlags[id].primary;
 						if (primaryFlags[id].primary) $(this).removeClass("button_clicked");
 						else $(this).addClass("button_clicked");
-						toggleEnitiy();
+						toggleEntity();
 					});
 				}
 			}
@@ -163,8 +163,8 @@ $(document).ready(function() {
 	// 	.attr('fill', '#eeeeee');
 
 	// Retrieve user data from user_data.json
-	d3.json("http://staging.yourview.org.au/visualization/user_data.json?forum=1&id_key=1", function(json) {
-	// d3.json("json/user_data_id_key.json", function(json) {
+	d3.json("/visualization/user_data.json?forum=1&id_key=1", function(json) {
+		// d3.json("json/user_data_id_key.json", function(json) {
 		userDict = json.users;
 		tags = json.tags;
 		initPrimaryFlags();
@@ -180,8 +180,8 @@ $(document).ready(function() {
 	// }
 
 	function initMap() {
-		d3.json("http://staging.yourview.org.au/visualization/points.json?forum=1&id_key=1", function(json) {
-		// d3.json("json/points_id_key.json", function(json) {
+		d3.json("/visualization/points.json?forum=1&id_key=1", function(json) {
+			// d3.json("json/points_id_key.json", function(json) {
 			pointDict = scale(json);
 			data = createData();
 			enter();
@@ -399,78 +399,72 @@ $(document).ready(function() {
 
 	function update() {
 		// Testing stuff
-		// d3.json("http://staging.yourview.org.au/visualization/points.json?forum=1", function(json) {
+		// d3.json("/visualization/points.json?forum=1", function(json) {
 		// d3.json(chooseRandDummyFile(), function(json) {
 
-			// pointDict = scale(json);
+		// pointDict = scale(json);
 
-			// Update the data with new points
-			data = createData();
+		// Update the data with new points
+		data = createData();
 
-			svg.selectAll("g")
-				.data(data, id)
-				.sort(primaryUnderneath)
-				.on("mouseover", function(d) {
-				var sel = d3.select(this);
-				sel.moveToFront();
-				console.log(d.username);
-			});
+		svg.selectAll("g")
+			.data(data, id)
+			.sort(primaryUnderneath)
+			.on("mouseover", function(d) {
+			var sel = d3.select(this);
+			sel.moveToFront();
+			console.log(d.username);
+		});
 
-			// enter() and append() are omitted for a transision
-			svg.selectAll("circle")
-				.data(data, id)
-				.transition()
-				.duration(1100)
-				.attr("cx", function(d) {
-				return d.x;
-			})
-				.attr("cy", function(d) {
-				return d.y;
-			})
-				.attr("r", function(d) {
-				if (isPrimary(d)) return circleRaduis;
-				else return circleRaduis - raduisShrinkage;
-			})
-				.style("stroke", function(d) {
-				if (isPrimary(d)) return "dark" + d.colour;
-				else return "dimgrey";
-			})
-				.style("stroke-width", 1)
-				.style("fill", function(d) {
-				if (isPrimary(d)) return d.colour;
-				return "grey";
-			});
+		// enter() and append() are omitted for a transision
+		svg.selectAll("circle")
+			.data(data, id)
+			.transition()
+			.duration(1100)
+			.attr("cx", function(d) {
+			return d.x;
+		})
+			.attr("cy", function(d) {
+			return d.y;
+		})
+			.attr("r", function(d) {
+			if (isPrimary(d)) return circleRaduis;
+			else return circleRaduis - raduisShrinkage;
+		})
+			.style("stroke", function(d) {
+			if (isPrimary(d)) return "dark" + d.colour;
+			else return "dimgrey";
+		})
+			.style("stroke-width", 1)
+			.style("fill", function(d) {
+			if (isPrimary(d)) return d.colour;
+			return "grey";
+		});
 
-			svg.selectAll("text")
-				.data(data, id)
-				.transition()
-				.duration(1100)
-				.attr("dx", function(d) {
-				if (is_firefox) return d.x * 2;
-				return d.x;
-			})
-				.attr("dy", function(d) {
-				return d.y + labelOffset;
-			})
-				.attr("font-family", "sans-serif")
-				.attr("font-size", "13px")
-				.style("text-anchor", "middle")
-				.text(function(d) {
-				return d.username;
-			});
+		svg.selectAll("text")
+			.data(data, id)
+			.transition()
+			.duration(1100)
+			.attr("dx", function(d) {
+			if (is_firefox) return d.x * 2;
+			return d.x;
+		})
+			.attr("dy", function(d) {
+			return d.y + labelOffset;
+		})
+			.attr("font-family", "sans-serif")
+			.attr("font-size", "13px")
+			.style("text-anchor", "middle")
+			.text(function(d) {
+			return d.username;
+		});
 
 		// });
 	}
 
-	// This is Called when buttons are toggled un the entity tab
+	// This is called when a button is clicked in the entity tab
 
-	function toggleEnitiy() {
-
-		// svg.selectAll('g')
-		// 	.style("opacity", function(d, i) {
-		// 	if (!visibility[i].isVisible) return 0.0;
-		// 	else return 0.8;
-		// });
+	function toggleEntity() {
 
 		// Set the dot to grey and smaller when not primary
 		svg.selectAll('circle')
@@ -494,7 +488,7 @@ $(document).ready(function() {
 			else return "grey";
 		});
 
-				// Hide the text if it dot is not a primary
+		// Hide the text if it dot is not a primary
 		svg.selectAll('text')
 			.transition()
 			.duration(500)
@@ -504,14 +498,9 @@ $(document).ready(function() {
 		});
 
 
+		// Sort all group elements so that coloured dots always appear at the bottom
 		svg.selectAll('g')
 			.sort(primaryUnderneath);
-		// svg.selectAll("g")
-		// 	.on("mouseover", function(d) {
-		// 	var sel = d3.select(this);
-		// 	sel.moveToFront();
-		// 	console.log(d.username);
-		// });
 
 	}
 
