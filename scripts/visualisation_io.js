@@ -175,7 +175,7 @@ var d3LoadedCallback = function() {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~d3 stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		var svg = d3.select("#plot")
+		var svg = d3.select("#map")
 			.append("svg")
 			.attr("width", w)
 			.attr("height", h);
