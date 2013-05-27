@@ -80,10 +80,10 @@ var d3LoadedCallback = function() {
 	$(document).ready(function() {
 		// jQuery stuff to build DOM from this script
 		var widget = document.getElementById("yourview-visualization");
-		var plot = $("<div id='plot'></div>");
+		var map = $("<div id='map'></div>");
 		var controls = $("<div id='controls'></div>");
 
-		plot.appendTo(widget);
+		map.appendTo(widget);
 		controls.appendTo(widget);
 
 		// Initiealise the controls; the tabs.
