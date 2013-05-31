@@ -118,7 +118,7 @@ $(document).ready(function() {
 				var td = $("<td></td>");
 				td.appendTo(tr);
 
-				if (userDict[key].showcase) {
+				if (userDict[key].notable) {
 					var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>");
 
 					// else var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").addClass("button_clicked");
