@@ -11,7 +11,7 @@ var data; // the  datajoin object for d3
 var tags; // Tag wieghts for sliders
 var userDict; // user data (index corresponds to that of points.json)
 var pointDict; // points (index corresponds to the users from user_data.json)
-var primaryFlags; // Dnother dictionary, key is the id, value is the boolean primary
+var showcased; // Stores boolean state of showcased for a key is the id, value is the boolean showcase
 
 // For bug where text labels are only half their supposed x value
 // See http://stackoverflow.com/questions/7000190/detect-all-firefox-versions-in-js
@@ -118,7 +118,7 @@ $(document).ready(function() {
 				var td = $("<td></td>");
 				td.appendTo(tr);
 
-				if (userDict[key].primary) {
+				if (userDict[key].showcase) {
 					var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>");
 
 					// else var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").addClass("button_clicked");
@@ -129,8 +129,8 @@ $(document).ready(function() {
 
 					$("#" + key).click(function() {
 						var id = $(this).attr('id');
-						primaryFlags[id].primary = !primaryFlags[id].primary;
-						if (primaryFlags[id].primary) $(this).removeClass("button_clicked");
+						showcased[id].showcase = !showcased[id].showcase;
+						if (showcased[id].showcase) $(this).removeClass("button_clicked");
 						else $(this).addClass("button_clicked");
 						toggleEntity();
 					});
@@ -167,7 +167,7 @@ $(document).ready(function() {
 		// d3.json("json/user_data_id_key.json", function(json) {
 		userDict = json.users;
 		tags = json.tags;
-		initPrimaryFlags();
+		initShowcased();
 		initControls();
 		initMap();
 	});
@@ -230,23 +230,23 @@ $(document).ready(function() {
 		return json;
 	}
 
-	// Set the boolean primary state array for all dots
+	// Set the boolean showcase state array for all dots
 
-	function initPrimaryFlags() {
-		primaryFlags = {};
+	function initShowcased() {
+		showcased = {};
 		for (var key in userDict) {
 			if (userDict.hasOwnProperty(key)) {
-				primaryFlags[key] = {
-					primary: userDict[key].primary
+				showcased[key] = {
+					showcase: userDict[key].showcase
 				};
 			}
 		}
 	}
 
-	// Boolean function returns true if the dot is set to primary
+	// Boolean function returns true if the dot is set to showcase
 
-	function isPrimary(d) {
-		return primaryFlags[d.id].primary ? true : false;
+	function isShowcased(d) {
+		return showcased[d.id].showcase ? true : false;
 	}
 
 	// Combines user data and point data into the d3 data object.
@@ -262,7 +262,8 @@ $(document).ready(function() {
 					cred: userDict[key].cred,
 					id: key,
 					link: userDict[key].link,
-					primary: userDict[key].primary,
+					notable: userDict[key].notable,
+					showcase: userDict[key].showcase,
 					username: userDict[key].username
 				});
 			}
@@ -308,8 +309,8 @@ $(document).ready(function() {
 
 	// An Aattempt at setting a higher z-order for grey dots
 	// function sortPrimaryZBelow(a, b) {
-	// 	if (a.primary && !b.primary) return -1;
-	// 	else if (!a.primary && b.primary) return 1;
+	// 	if (a.showcase && !b.showcase) return -1;
+	// 	else if (!a.showcase && b.showcase) return 1;
 	// 	else return 0;
 	// }
 
@@ -323,7 +324,7 @@ $(document).ready(function() {
 	// Called by sort() to order grey dots ontop of coloured dots
 
 	function primaryUnderneath(a, b) {
-		return d3.descending(isPrimary(a), isPrimary(b));
+		return d3.descending(isShowcased(a), isShowcased(b));
 	}
 
 	// The d3 enter event wrapper.
@@ -353,18 +354,18 @@ $(document).ready(function() {
 			return 0.7;
 		})
 			.style("stroke", function(d) {
-			if (isPrimary(d)) return "dark" + d.colour;
+			if (isShowcased(d)) return "dark" + d.colour;
 			else return "dimgrey";
 		})
 			.style("stroke-width", 1)
 			.style("fill", function(d) {
-			if (isPrimary(d)) return d.colour;
+			if (isShowcased(d)) return d.colour;
 			return "grey";
 		})
 			.transition()
 			.duration(700)
 			.attr("r", function(d, i) {
-			if (isPrimary(d)) return circleRaduis;
+			if (isShowcased(d)) return circleRaduis;
 			else return circleRaduis - raduisShrinkage;
 		});
 
@@ -379,7 +380,7 @@ $(document).ready(function() {
 			.attr("font-family", "sans-serif")
 			.attr("font-size", "13px")
 			.style("opacity", function(d) {
-			if (isPrimary(d)) return 1.0;
+			if (isShowcased(d)) return 1.0;
 			else return 0.0;
 		})
 			.style("text-anchor", "middle")
@@ -428,16 +429,16 @@ $(document).ready(function() {
 			return d.y;
 		})
 			.attr("r", function(d) {
-			if (isPrimary(d)) return circleRaduis;
+			if (isShowcased(d)) return circleRaduis;
 			else return circleRaduis - raduisShrinkage;
 		})
 			.style("stroke", function(d) {
-			if (isPrimary(d)) return "dark" + d.colour;
+			if (isShowcased(d)) return "dark" + d.colour;
 			else return "dimgrey";
 		})
 			.style("stroke-width", 1)
 			.style("fill", function(d) {
-			if (isPrimary(d)) return d.colour;
+			if (isShowcased(d)) return d.colour;
 			return "grey";
 		});
 
@@ -466,17 +467,17 @@ $(document).ready(function() {
 
 	function toggleEntity() {
 
-		// Set the dot to grey and smaller when not primary
+		// Set the dot to grey and smaller when not showcase
 		svg.selectAll('circle')
 			.transition()
 			.duration(500)
 			.attr("r", function(d) {
-			if (isPrimary(d)) return circleRaduis;
+			if (isShowcased(d)) return circleRaduis;
 			else return circleRaduis - raduisShrinkage;
 		})
 			.style("stroke", function(d) {
-			if ((isPrimary(d)) && d.colour == "grey") return "dimgrey";
-			else if (isPrimary(d)) {
+			if ((isShowcased(d)) && d.colour == "grey") return "dimgrey";
+			else if (isShowcased(d)) {
 				return "dark" + d.colour;
 			} else {
 				return "dimgrey";
@@ -484,16 +485,16 @@ $(document).ready(function() {
 		})
 			.style("stroke-width", 1)
 			.style("fill", function(d) {
-			if (isPrimary(d)) return d.colour;
+			if (isShowcased(d)) return d.colour;
 			else return "grey";
 		});
 
-		// Hide the text if it dot is not a primary
+		// Hide the text if it dot is not a showcase
 		svg.selectAll('text')
 			.transition()
 			.duration(500)
 			.style("opacity", function(d) {
-			if (isPrimary(d)) return 1.0;
+			if (isShowcased(d)) return 1.0;
 			else return 0.0;
 		});
 
