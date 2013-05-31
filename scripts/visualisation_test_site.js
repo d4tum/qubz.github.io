@@ -1,10 +1,10 @@
 // Constants
 var w = 600;
 var h = 600;
-var svgPadding = 60;
-var circleRaduis = 12;
-var raduisShrinkage = 4;
-var labelOffset = 25;
+var svgPadding = 60; // Used for scaling to ensure visibility of whole circles
+var circleRaduis = 12; // Raduis of a large coloured circle
+var raduisShrinkage = 4; // Amount the raduis shrink by when changing to a small grey circle
+var labelOffset = 25; // The offset of the text label relative to the y-axis
 
 // Global vars
 var data; // the  datajoin object for d3
@@ -27,8 +27,8 @@ $(document).ready(function() {
 	map.appendTo(widget);
 	controls.appendTo(widget);
 
-	// Initiealise the controls; the tabs.
-
+	// Initialise the controls, tabs, sliders and buttons.
+	// Called once when the visualisation is first setup
 	function initControls() {
 		var tabs = $("<div id='tabs' class='container'></div>");
 		tabs.appendTo(controls);
@@ -56,6 +56,7 @@ $(document).ready(function() {
 		sliderHeaderTitle.appendTo(tab1);
 
 		// Tag weight sliders
+		// Iterate through tags adding the name and weight to each slider
 		var sliders = [];
 		for (var i = 0; i < tags.length; i++) {
 			sliders.push($("<p>" + tags[i].name + "</p><div id='" + tags[i].id + "'></div>"));
@@ -66,37 +67,36 @@ $(document).ready(function() {
 				min: 0,
 				max: 1,
 				step: 0.25
-			}).on("slidestop", function(event, ui) {
+			}).on("slidestop", function(event, ui) { // Event listener for slider stop.
 				// Find the id of the slider just changed
 				var id = $(this).attr('id');
+
 				// Set the tag weight to the value of the slider
 				for (var j = 0; j < tags.length; j++) {
 					if (tags[j].id == id) tags[j].weight = $(this).slider("value");
 				}
-				// Parse tags array into a string to append to the API url
+
+				// Parse the tags info into a string to append to the API url
 				var str = "";
 				for (var i = 0; i < tags.length; i++) {
 					str += "&tag[" + tags[i].id + "]=" + tags[i].weight;
 				};
 
-				// DEBUG
-				//console.log(str);
-
-				// make an ajax request
+				// ajax get the new points given tag weights
 				$.ajax({
 					type: 'GET',
 					dataType: 'json',
 					url: '/visualization/points.json?forum=1&id_key=1' + str,
 					success: function(json) {
+						// scale new points
 						pointDict = scale(json);
+						// update the visualisation
 						update();
 					},
 					error: function(jqXHR, textStatus, errorThrown) {
 						console.log(textStatus, errorThrown);
 					}
 				});
-
-				// update();
 			});
 		}
 
@@ -106,7 +106,8 @@ $(document).ready(function() {
 		var table = $("<table></table>");
 		table.appendTo(tab2);
 
-		// Entity buttons
+		// Entity buttons are added to this array
+		// Iterate through every user an add a button for notable users
 		var entities = [];
 		var i = 0;
 		for (var key in userDict) {
@@ -118,9 +119,10 @@ $(document).ready(function() {
 				var td = $("<td></td>");
 				td.appendTo(tr);
 
+				// Only create buttons for notable users
 				if (userDict[key].notable) {
 					if (userDict[key].showcase)
-						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>");
+						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").removeClass("button_clicked");
 					else
 						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").addClass("button_clicked");
 
@@ -128,11 +130,21 @@ $(document).ready(function() {
 					entities[i].appendTo(td);
 					i++;
 
+					// CLick listener
 					$("#" + key).click(function() {
+						// Grab the id
 						var id = $(this).attr('id');
+						// toggle the boolean in showcased
+						console.log('id');
+						console.log(showcased[id].showcase + "");
+
 						showcased[id].showcase = !showcased[id].showcase;
+						console.log(showcased[id].showcase + "");
+						// If the circle is large and coloured, remove the clicked state overlay
 						if (showcased[id].showcase) $(this).removeClass("button_clicked");
+						// else it is grey and small, so show its has been toggled
 						else $(this).addClass("button_clicked");
+						// call the toggle function
 						toggleEntity();
 					});
 				}
@@ -165,7 +177,6 @@ $(document).ready(function() {
 
 	// Retrieve user data from user_data.json
 	d3.json("/visualization/user_data.json?forum=1&id_key=1", function(json) {
-		// d3.json("json/user_data_id_key.json", function(json) {
 		userDict = json.users;
 		tags = json.tags;
 		initShowcased();
@@ -182,7 +193,6 @@ $(document).ready(function() {
 
 	function initMap() {
 		d3.json("/visualization/points.json?forum=1&id_key=1", function(json) {
-			// d3.json("json/points_id_key.json", function(json) {
 			pointDict = scale(json);
 			data = createData();
 			enter();
@@ -191,7 +201,7 @@ $(document).ready(function() {
 
 	// Map the input domain given in the x and y coordunates 
 	// to the output range defined by the width - padding
-	// This coyld be done in enter/upade when setting x and y attributes.
+	// This could also be done in enter/update when setting x and y attributes.
 
 	function scale(json) {
 		var xs = [];
@@ -231,7 +241,7 @@ $(document).ready(function() {
 		return json;
 	}
 
-	// Set the boolean showcase state array for all dots
+	// Set the boolean showcase state array for all points
 
 	function initShowcased() {
 		showcased = {};
@@ -242,12 +252,6 @@ $(document).ready(function() {
 				};
 			}
 		}
-	}
-
-	// Boolean function returns true if the dot is set to showcase
-
-	function isShowcased(d) {
-		return showcased[d.id].showcase ? true : false;
 	}
 
 	// Combines user data and point data into the d3 data object.
@@ -273,48 +277,6 @@ $(document).ready(function() {
 		return dataset;
 	}
 
-	// Used for testing
-	var previousIndex;
-
-	function chooseRandDummyFile() {
-		var array = [];
-
-		// path1 = "https://raw.github.com/qubz/YourView-Political-Alignment-Visualisation/master/json/dummy_points1.json";
-		// path2 = "https://raw.github.com/qubz/YourView-Political-Alignment-Visualisation/master/json/dummy_points2.json";
-		// path3 = "https://raw.github.com/qubz/YourView-Political-Alignment-Visualisation/master/json/dummy_points3.json";
-		// path4 = "https://raw.github.com/qubz/YourView-Political-Alignment-Visualisation/master/json/dummy_points4.json";
-		// path5 = "https://raw.github.com/qubz/YourView-Political-Alignment-Visualisation/master/json/dummy_points5.json";
-
-		path1 = "json/points_id_key1.json";
-		path2 = "json/points_id_key2.json";
-		path3 = "json/points_id_key3.json";
-		// path4 = "json/dummy_points4.json";
-		// path5 = "json/dummy_points5.json";
-
-		array.push(path1);
-		array.push(path2);
-		array.push(path3);
-		// array.push(path4);
-		// array.push(path5);
-
-		// Make sure we choose an index different to the last one.
-		while (true) {
-			index = Math.floor((Math.random() * array.length) + 1);
-			if (previousIndex != index) break;
-		}
-
-		previousIndex = index;
-		console.log(array[index - 1]);
-		return array[index - 1];
-	}
-
-	// An Aattempt at setting a higher z-order for grey dots
-	// function sortPrimaryZBelow(a, b) {
-	// 	if (a.showcase && !b.showcase) return -1;
-	// 	else if (!a.showcase && b.showcase) return 1;
-	// 	else return 0;
-	// }
-
 	// Key function
 	// see - http://bost.ocks.org/mike/selection/#key
 
@@ -326,6 +288,12 @@ $(document).ready(function() {
 
 	function showcaseUnderneath(a, b) {
 		return d3.descending(isShowcased(a), isShowcased(b));
+	}
+
+	// Boolean function returns true if the dot is set to showcase
+
+	function isShowcased(d) {
+		return showcased[d.id].showcase ? true : false;
 	}
 
 	// The d3 enter event wrapper.
@@ -400,12 +368,6 @@ $(document).ready(function() {
 	// This is called on subsequent updates of points from changing the sliders.
 
 	function update() {
-		// Testing stuff
-		// d3.json("/visualization/points.json?forum=1", function(json) {
-		// d3.json(chooseRandDummyFile(), function(json) {
-
-		// pointDict = scale(json);
-
 		// Update the data with new points
 		data = createData();
 
