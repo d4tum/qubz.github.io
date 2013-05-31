@@ -29,6 +29,7 @@ $(document).ready(function() {
 
 	// Initialise the controls, tabs, sliders and buttons.
 	// Called once when the visualisation is first setup
+
 	function initControls() {
 		var tabs = $("<div id='tabs' class='container'></div>");
 		tabs.appendTo(controls);
@@ -106,40 +107,32 @@ $(document).ready(function() {
 		var table = $("<table></table>");
 		table.appendTo(tab2);
 
-		// Entity buttons are added to this array
 		// Iterate through every user an add a button for notable users
-		var entities = [];
-		var i = 0;
 		for (var key in userDict) {
 			if (userDict.hasOwnProperty(key)) {
-
-				var tr = $("<tr></tr>");
-				tr.appendTo(table);
-
-				var td = $("<td></td>");
-				td.appendTo(tr);
-
 				// Only create buttons for notable users
 				if (userDict[key].notable) {
-					if (userDict[key].showcase)
-						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").removeClass("button_clicked");
-					else
-						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").addClass("button_clicked");
+					var tr = $("<tr></tr>");
+					tr.appendTo(table);
 
-					entities.push(button);
-					entities[i].appendTo(td);
-					i++;
+					var td = $("<td></td>");
+					td.appendTo(tr);
+
+					var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>");
+					console.log(key + " " + userDict[key].username);
+
+					if (!userDict[key].showcase)
+						button.addClass("button_clicked");
+
+					button.appendTo(td);
 
 					// CLick listener
-					$("#" + key).click(function() {
-						// Grab the id
+					button.click(function() {
+						// Grab the id which was set as the key
 						var id = $(this).attr('id');
+						console.log(id + "");
 						// toggle the boolean in showcased
-						console.log('id');
-						console.log(showcased[id].showcase + "");
-
 						showcased[id].showcase = !showcased[id].showcase;
-						console.log(showcased[id].showcase + "");
 						// If the circle is large and coloured, remove the clicked state overlay
 						if (showcased[id].showcase) $(this).removeClass("button_clicked");
 						// else it is grey and small, so show its has been toggled
@@ -147,6 +140,8 @@ $(document).ready(function() {
 						// call the toggle function
 						toggleEntity();
 					});
+
+
 				}
 			}
 		}
@@ -254,6 +249,12 @@ $(document).ready(function() {
 		}
 	}
 
+	// Boolean function returns true if the dot is set to showcase
+
+	function isShowcased(d) {
+		return showcased[d.id].showcase ? true : false;
+	}
+
 	// Combines user data and point data into the d3 data object.
 
 	function createData() {
@@ -266,6 +267,7 @@ $(document).ready(function() {
 					colour: userDict[key].colour,
 					cred: userDict[key].cred,
 					id: key,
+					index: userDict[key].index,
 					link: userDict[key].link,
 					notable: userDict[key].notable,
 					showcase: userDict[key].showcase,
@@ -288,12 +290,6 @@ $(document).ready(function() {
 
 	function showcaseUnderneath(a, b) {
 		return d3.descending(isShowcased(a), isShowcased(b));
-	}
-
-	// Boolean function returns true if the dot is set to showcase
-
-	function isShowcased(d) {
-		return showcased[d.id].showcase ? true : false;
 	}
 
 	// The d3 enter event wrapper.
