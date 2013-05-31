@@ -119,9 +119,10 @@ $(document).ready(function() {
 				td.appendTo(tr);
 
 				if (userDict[key].notable) {
-					var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>");
-
-					// else var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").addClass("button_clicked");
+					if (userDict[key].showcase)
+						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>");
+					else
+						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>").addClass("button_clicked");
 
 					entities.push(button);
 					entities[i].appendTo(td);
@@ -323,7 +324,7 @@ $(document).ready(function() {
 
 	// Called by sort() to order grey dots ontop of coloured dots
 
-	function primaryUnderneath(a, b) {
+	function showcaseUnderneath(a, b) {
 		return d3.descending(isShowcased(a), isShowcased(b));
 	}
 
@@ -336,7 +337,7 @@ $(document).ready(function() {
 			.data(data, id)
 			.enter()
 			.append("g")
-			.order(primaryUnderneath)
+			.order(showcaseUnderneath)
 			.on("mouseover", function(d) {
 			var sel = d3.select(this);
 			sel.moveToFront();
@@ -410,7 +411,7 @@ $(document).ready(function() {
 
 		svg.selectAll("g")
 			.data(data, id)
-			.sort(primaryUnderneath)
+			.sort(showcaseUnderneath)
 			.on("mouseover", function(d) {
 			var sel = d3.select(this);
 			sel.moveToFront();
@@ -467,7 +468,7 @@ $(document).ready(function() {
 
 	function toggleEntity() {
 
-		// Set the dot to grey and smaller when not showcase
+		// Set the dot to grey and smaller when not showcased
 		svg.selectAll('circle')
 			.transition()
 			.duration(500)
@@ -501,7 +502,7 @@ $(document).ready(function() {
 
 		// Sort all group elements so that coloured dots always appear at the bottom
 		svg.selectAll('g')
-			.sort(primaryUnderneath);
+			.sort(showcaseUnderneath);
 
 	}
 
