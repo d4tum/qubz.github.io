@@ -288,8 +288,8 @@ $(document).ready(function() {
 
 	// Called by sort() to order grey dots ontop of coloured dots
 
-	function showcaseUnderneath(a, b) {
-		return d3.descending(isShowcased(a), isShowcased(b));
+	function showcaseZOrderOnTop(a, b) {
+		return d3.ascending(isShowcased(a), isShowcased(b));
 	}
 
 	// The d3 enter event wrapper.
@@ -301,12 +301,14 @@ $(document).ready(function() {
 			.data(data, id)
 			.enter()
 			.append("g")
-			.order(showcaseUnderneath)
 			.on("mouseover", function(d) {
 			var sel = d3.select(this);
 			sel.moveToFront();
 			console.log(d.username);
 		});
+
+		// Sort all group elements so that coloured dots always appear at the bottom
+		g.sort(showcaseZOrderOnTop);
 
 		g.append("circle")
 			.attr("cx", function(d) {
@@ -369,7 +371,6 @@ $(document).ready(function() {
 
 		svg.selectAll("g")
 			.data(data, id)
-			.sort(showcaseUnderneath)
 			.on("mouseover", function(d) {
 			var sel = d3.select(this);
 			sel.moveToFront();
@@ -419,12 +420,14 @@ $(document).ready(function() {
 			return d.username;
 		});
 
-		// });
 	}
 
 	// This is called when a button is clicked in the entity tab
 
 	function toggleEntity() {
+		// Sort all group elements so that coloured dots always appear at the bottom
+		svg.selectAll('g')
+			.sort(showcaseZOrderOnTop);
 
 		// Set the dot to grey and smaller when not showcased
 		svg.selectAll('circle')
@@ -456,11 +459,6 @@ $(document).ready(function() {
 			if (isShowcased(d)) return 1.0;
 			else return 0.0;
 		});
-
-
-		// Sort all group elements so that coloured dots always appear at the bottom
-		svg.selectAll('g')
-			.sort(showcaseUnderneath);
 
 	}
 
