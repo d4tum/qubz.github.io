@@ -6,14 +6,17 @@
 // Constants
 var w = 600;
 var h = 600;
-var padding = 60;
-var radius = 15;
+var svgPadding = 60; // Used for scaling to ensure visibility of whole circles
+var circleRaduis = 12; // Raduis of a large coloured circle
+var raduisShrinkage = 4; // Amount the raduis shrink by when changing to a small grey circle
+var labelOffset = 25; // The offset of the text label relative to the y-axis
 
 // Global vars
-var data = []; // the  datajoin object for d3
+var data; // the  datajoin object for d3
 var tags; // Tag wieghts for sliders
-var users; // user data (index corresponds to that of points.json)
-var points; // points (index corresponds to the users from user_data.json)
+var userDict; // user data (index corresponds to that of points.json)
+var pointDict; // points (index corresponds to the users from user_data.json)
+var showcased; // Stores boolean state of showcased for a key is the id, value is the boolean showcase
 
 // For bug where text labels are only half their supposed x value
 // See http://stackoverflow.com/questions/7000190/detect-all-firefox-versions-in-js
@@ -130,7 +133,7 @@ var d3LoadedCallback = function() {
 					value: tags[i].weight,
 					min: 0,
 					max: 1,
-					step: 0.2
+					step: 0.25
 				}).on("slidestop", function(event, ui) {
 					update();
 				});
@@ -142,35 +145,43 @@ var d3LoadedCallback = function() {
 			var table = $("<table></table>");
 			table.appendTo(tab2);
 
-			// Add each button from users and set its callback function
-			// TODO: 	- This could probably be simplified
-			//			- Checked/clicked state (using Checkbox button?)
-			//			- Tranlate to links?
-			var entities = [];
-			for (var i = 0; i < users.length; i++) {
+			// Iterate through every user an add a button for notable users
+			for (var key in userDict) {
+				if (userDict.hasOwnProperty(key)) {
+					// Only create buttons for notable users
+					if (userDict[key].notable) {
+						var tr = $("<tr></tr>");
+						tr.appendTo(table);
 
-				var tr = $("<tr></tr>");
-				tr.appendTo(table);
+						var td = $("<td></td>");
+						td.appendTo(tr);
 
-				var td = $("<td></td>");
-				td.appendTo(tr);
+						var button = $("<button id='" + key + "' class='button'>" + userDict[key].username + "</button>");
+						console.log(key + " " + userDict[key].username);
 
-				entities.push($("<button id='" + users[i].id + "' class='button'>" + users[i].username + "</button>").addClass("button_clicked"));
-				entities[i].appendTo(td);
+						if (!userDict[key].showcase)
+							button.addClass("button_clicked");
 
-				$("#" + users[i].id).click(function() {
-					var id = $(this).attr('id');
-					for (var j = 0; j < users.length; j++) {
-						if (users[j].id == id) {
-							users[j].primary = !users[j].primary;
-							if (users[j].primary) $(this).addClass("button_clicked");
-							else $(this).removeClass("button_clicked");
-							toggleEnitiy();
+						button.appendTo(td);
 
-						}
+						// CLick listener
+						button.click(function() {
+							// Grab the id which was set as the key
+							var id = $(this).attr('id');
+							console.log(id + "");
+							// toggle the boolean in showcased
+							showcased[id].showcase = !showcased[id].showcase;
+							// If the circle is large and coloured, remove the clicked state overlay
+							if (showcased[id].showcase) $(this).removeClass("button_clicked");
+							// else it is grey and small, so show its has been toggled
+							else $(this).addClass("button_clicked");
+							// call the toggle function
+							toggleEntity();
+						});
+
+
 					}
-
-				});
+				}
 			}
 
 			$(function() {
@@ -191,10 +202,10 @@ var d3LoadedCallback = function() {
 			users = json.users;
 			tags = json.tags;
 			initControls();
-			initPlot();
+			initMap();
 		});
 
-		function initPlot() {
+		function initMap() {
 			// d3.json("http://staging.yourview.org.au/visualization/points.json?forum=1", function(json) {
 			d3.json("json/points.json", function(json) {
 				points = scale(json);
@@ -203,13 +214,19 @@ var d3LoadedCallback = function() {
 			});
 		}
 
-		function scale(points) {
+		// Map the input domain given in the x and y coordunates 
+		// to the output range defined by the width - padding
+		// This could also be done in enter/update when setting x and y attributes.
+
+		function scale(json) {
 			var xs = [];
 			var ys = [];
 
-			for (var i = 0; i < points.length; i++) {
-				xs.push(points[i][0]);
-				ys.push(points[i][1]);
+			for (var key in json) {
+				if (json.hasOwnProperty(key)) {
+					xs.push(json[key][0]);
+					ys.push(json[key][1]);
+				}
 			}
 
 			var xMin = d3.min(xs);
@@ -225,35 +242,75 @@ var d3LoadedCallback = function() {
 
 			var linearScale = d3.scale.linear()
 				.domain([min, max])
-				.range([0 + padding, w - padding]);
+				.range([0 + svgPadding, w - svgPadding]);
 
-			var scaledPoints = []
-			for (var i = 0; i < points.length; i++) {
-				xs[i] = linearScale(xs[i]);
-				ys[i] = linearScale(ys[i]);
-				scaledPoints.push([xs[i], ys[i]]);
+			var i = 0;
+			for (var key in json) {
+				if (json.hasOwnProperty(key)) {
+					json[key][0] = linearScale(xs[i]);
+					json[key][1] = linearScale(ys[i]);
+					i++;
+				}
 			}
 
-			return scaledPoints;
+			return json;
 		}
+
+
+		// Set the boolean showcase state array for all points
+
+		function initShowcased() {
+			showcased = {};
+			for (var key in userDict) {
+				if (userDict.hasOwnProperty(key)) {
+					showcased[key] = {
+						showcase: userDict[key].showcase
+					};
+				}
+			}
+		}
+
+		// Boolean function returns true if the dot is set to showcase
+
+		function isShowcased(d) {
+			return showcased[d.id].showcase ? true : false;
+		}
+
+		// Combines user data and point data into the d3 data object.
 
 		function createData() {
 			var dataset = [];
-			// Merge users with points into an object
-			for (var i = 0; i < users.length; i++) {
-				dataset.push({
-					x: points[i][0],
-					y: points[i][1],
-					colour: users[i].colour,
-					cred: users[i].cred,
-					id: users[i].id,
-					link: users[i].link,
-					primary: users[i].primary,
-					username: users[i].username
-				});
+			for (var key in userDict) {
+				if (userDict.hasOwnProperty(key)) {
+					dataset.push({
+						x: pointDict[key][0],
+						y: pointDict[key][1],
+						colour: userDict[key].colour,
+						cred: userDict[key].cred,
+						id: key,
+						index: userDict[key].index,
+						link: userDict[key].link,
+						notable: userDict[key].notable,
+						showcase: userDict[key].showcase,
+						username: userDict[key].username
+					});
+				}
 			}
 
 			return dataset;
+		}
+
+		// Key function
+		// see - http://bost.ocks.org/mike/selection/#key
+
+		function id(d) {
+			return d.id;
+		}
+
+		// Called by sort() to order grey dots ontop of coloured dots
+
+		function showcaseZOrderOnTop(a, b) {
+			return d3.ascending(isShowcased(a), isShowcased(b));
 		}
 
 		var previousIndex;
@@ -284,15 +341,13 @@ var d3LoadedCallback = function() {
 			return array[index - 1];
 		}
 
-		function sortPrimaryZBelow(a, b) {
-			if (a.primary && !b.primary) return -1;
-			else if (!a.primary && b.primary) return 1;
-			else return 0;
-		}
+		// The d3 enter event wrapper.
+		// This is called only once, after the page is first loaded
+		// Not a remove event is not used in this script.
 
-		function draw() {
+		function enter() {
 			var g = svg.selectAll("g")
-				.data(data)
+				.data(data, id)
 				.enter()
 				.append("g")
 				.on("mouseover", function(d) {
@@ -301,8 +356,10 @@ var d3LoadedCallback = function() {
 				console.log(d.username);
 			});
 
-			g.append("circle")
+			// Sort all group elements so that coloured dots always appear at the bottom
+			g.sort(showcaseZOrderOnTop);
 
+			g.append("circle")
 				.attr("cx", function(d) {
 				return d.x;
 			})
@@ -310,20 +367,22 @@ var d3LoadedCallback = function() {
 				return d.y;
 			})
 				.style("opacity", function(d) {
-				return 0.8;
+				return 0.7;
 			})
-
 				.style("stroke", function(d) {
-				return "dark" + d.colour;
+				if (isShowcased(d)) return "dark" + d.colour;
+				else return "dimgrey";
 			})
-				.style("stroke-width", 2)
+				.style("stroke-width", 1)
 				.style("fill", function(d) {
-				return d.colour;
+				if (isShowcased(d)) return d.colour;
+				return "grey";
 			})
 				.transition()
 				.duration(700)
-				.attr("r", function(d) {
-				return radius;
+				.attr("r", function(d, i) {
+				if (isShowcased(d)) return circleRaduis;
+				else return circleRaduis - raduisShrinkage;
 			});
 
 			g.append("text")
@@ -332,10 +391,14 @@ var d3LoadedCallback = function() {
 				return d.x;
 			})
 				.attr("dy", function(d) {
-				return d.y + 35;
+				return d.y + labelOffset;
 			})
 				.attr("font-family", "sans-serif")
 				.attr("font-size", "13px")
+				.style("opacity", function(d) {
+				if (isShowcased(d)) return 1.0;
+				else return 0.0;
+			})
 				.style("text-anchor", "middle")
 				.text(function(d) {
 				return d.username;
@@ -354,16 +417,19 @@ var d3LoadedCallback = function() {
 				// update datapoints
 				data = createData();
 
+				data = createData();
+
 				svg.selectAll("g")
-					.data(data)
+					.data(data, id)
 					.on("mouseover", function(d) {
 					var sel = d3.select(this);
 					sel.moveToFront();
 					console.log(d.username);
 				});
-				// enter() and append() are omitted for a transision()
+
+				// enter() and append() are omitted for a transision
 				svg.selectAll("circle")
-					.data(data)
+					.data(data, id)
 					.transition()
 					.duration(1100)
 					.attr("cx", function(d) {
@@ -372,22 +438,22 @@ var d3LoadedCallback = function() {
 					.attr("cy", function(d) {
 					return d.y;
 				})
-					.attr("r", function(d, i) {
-					if (users[i].primary) return radius;
-					else return radius - 5;
+					.attr("r", function(d) {
+					if (isShowcased(d)) return circleRaduis;
+					else return circleRaduis - raduisShrinkage;
 				})
-					.style("stroke", function(d, i) {
-					if (users[i].primary) return "dark" + d.colour;
-					else return "dimgray";
+					.style("stroke", function(d) {
+					if (isShowcased(d)) return "dark" + d.colour;
+					else return "dimgrey";
 				})
-					.style("stroke-width", 2)
-					.style("fill", function(d, i) {
-					if (users[i].primary) return d.colour;
-					else return "dimgray";
-				})
+					.style("stroke-width", 1)
+					.style("fill", function(d) {
+					if (isShowcased(d)) return d.colour;
+					return "grey";
+				});
 
 				svg.selectAll("text")
-					.data(data)
+					.data(data, id)
 					.transition()
 					.duration(1100)
 					.attr("dx", function(d) {
@@ -395,7 +461,7 @@ var d3LoadedCallback = function() {
 					return d.x;
 				})
 					.attr("dy", function(d) {
-					return d.y + 35;
+					return d.y + labelOffset;
 				})
 					.attr("font-family", "sans-serif")
 					.attr("font-size", "13px")
@@ -407,43 +473,40 @@ var d3LoadedCallback = function() {
 			});
 		}
 
-		function toggleEnitiy() {
+		function toggleEntity() {
+			// Sort all group elements so that coloured dots always appear at the bottom
+			svg.selectAll('g')
+				.sort(showcaseZOrderOnTop);
 
-			// svg.selectAll('g')
-			// 	.style("opacity", function(d, i) {
-			// 	if (!visibility[i].isVisible) return 0.0;
-			// 	else return 0.8;
-			// });
-
-			svg.selectAll('text')
-				.transition()
-				.style("opacity", function(d, i) {
-				if (users[i].primary) return 1.0;
-				else return 0.0;
-			});
-
+			// Set the dot to grey and smaller when not showcased
 			svg.selectAll('circle')
 				.transition()
 				.duration(500)
-				.attr("r", function(d, i) {
-				if (users[i].primary) return radius;
-				else return radius - 5;
+				.attr("r", function(d) {
+				if (isShowcased(d)) return circleRaduis;
+				else return circleRaduis - raduisShrinkage;
 			})
-				.style("stroke", function(d, i) {
-				if (users[i].primary) return "dark" + d.colour;
-				else return "dimgray";
+				.style("stroke", function(d) {
+				if ((isShowcased(d)) && d.colour == "grey") return "dimgrey";
+				else if (isShowcased(d)) {
+					return "dark" + d.colour;
+				} else {
+					return "dimgrey";
+				}
 			})
-				.style("stroke-width", 2)
-				.style("fill", function(d, i) {
-				if (users[i].primary) return d.colour;
-				return "dimgray";
+				.style("stroke-width", 1)
+				.style("fill", function(d) {
+				if (isShowcased(d)) return d.colour;
+				else return "grey";
 			});
 
-			svg.selectAll("g")
-				.on("mouseover", function(d) {
-				var sel = d3.select(this);
-				sel.moveToFront();
-				console.log(d.username);
+			// Hide the text if it dot is not a showcase
+			svg.selectAll('text')
+				.transition()
+				.duration(500)
+				.style("opacity", function(d) {
+				if (isShowcased(d)) return 1.0;
+				else return 0.0;
 			});
 
 		}
