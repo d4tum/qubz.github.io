@@ -199,8 +199,9 @@ var d3LoadedCallback = function() {
 		// Retrieve user data from user_data.json
 		// d3.json("http://staging.yourview.org.au/visualization/user_data.json?forum=1", function(json) {
 		d3.json("json/user_data.json", function(json) {
-			users = json.users;
+			userDict = json.users;
 			tags = json.tags;
+			initShowcased();
 			initControls();
 			initMap();
 		});
@@ -208,7 +209,7 @@ var d3LoadedCallback = function() {
 		function initMap() {
 			// d3.json("http://staging.yourview.org.au/visualization/points.json?forum=1", function(json) {
 			d3.json("json/points.json", function(json) {
-				points = scale(json);
+				pointDict = scale(json);
 				data = createData();
 				enter();
 			});
