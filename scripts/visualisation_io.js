@@ -210,7 +210,7 @@ var d3LoadedCallback = function() {
 			d3.json("json/points.json", function(json) {
 				points = scale(json);
 				data = createData();
-				draw();
+				enter();
 			});
 		}
 
