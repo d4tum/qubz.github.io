@@ -119,17 +119,17 @@ var d3LoadedCallback = function() {
 			tab1.appendTo(tabs);
 
 			// Decribe the function of the tag weights to the user
-			var sliderHeaderTitle = $("<p id='slider-header-title' ><--- Less --- IMPORTANT --- More ---></p>");
-			sliderHeaderTitle.appendTo(tab1);
+		var sliderHeaderTitle = $("<p id='slider-header-title' ><-- Less -- IMPORTANT -- More --></p>");
+		sliderHeaderTitle.appendTo(tab1);
 
-			// Add each slider from tags and set its callback function
-			// TODO: 	- A POST request with all tags sent to the server for fresh points
-			var sliders = [];
-			for (var i = 0; i < tags.length; i++) {
-				sliders.push($("<p>" + tags[i].name + "</p><div id='slider" + i + "'></div>"));
-				sliders[i].appendTo(tab1);
+		// Tag weight sliders
+		// Iterate through tags adding the name and weight to each slider
+		var sliders = [];
+		for (var i = 0; i < tags.length; i++) {
+			sliders.push($("<p>" + tags[i].name + "</p><div id='" + tags[i].id + "'></div>"));
+			sliders[i].appendTo(tab1);
 
-				$("#slider" + i).slider({
+				$("#" + tags[i].id).slider({
 					value: tags[i].weight,
 					min: 0,
 					max: 1,
@@ -416,8 +416,6 @@ var d3LoadedCallback = function() {
 			d3.json(chooseRandDummyFile(), function(json) {
 				points = scale(json);
 				// update datapoints
-				data = createData();
-
 				data = createData();
 
 				svg.selectAll("g")
